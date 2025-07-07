@@ -33,7 +33,8 @@ var (
 	// Style for code snippets and examples
 	codeStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("244")). // Gray
-			Background(lipgloss.Color("237"))
+			Background(lipgloss.Color("237")).
+			Padding(0, 1)
 
 	// Style for titles within the guideline box
 	titleStyle = lipgloss.NewStyle().
@@ -43,19 +44,10 @@ var (
 )
 
 func main() {
-	// Define the allowed commit types
-	allowedTypes := map[string]bool{
-		"feat":     true,
-		"fix":      true,
-		"build":    true,
-		"chore":    true,
-		"ci":       true,
-		"docs":     true,
-		"style":    true,
-		"refactor": true,
-		"perf":     true,
-		"test":     true,
-		"revert":   true,
+	// Define the allowed commit types as a slice for easy printing.
+	allowedTypes := []string{
+		"feat", "fix", "build", "chore", "ci", "docs", "style",
+		"refactor", "perf", "test", "revert",
 	}
 
 	// Check for the correct number of arguments
@@ -101,8 +93,11 @@ func main() {
 
 	// Validate the commit type
 	commitType := result["type"]
-	if !allowedTypes[commitType] {
+	if !isAllowedType(commitType, allowedTypes) {
 		fmt.Println(errorStyle.Render("[ERROR] Invalid commit type:"), fmt.Sprintf("'%s'", commitType))
+		// Display the list of allowed types.
+		fmt.Println("\nAllowed types are:")
+		fmt.Println("  " + codeStyle.Render(strings.Join(allowedTypes, ", ")))
 		printGuidelines()
 		os.Exit(1)
 	}
@@ -123,6 +118,16 @@ func main() {
 	// If all checks pass
 	fmt.Println(successStyle.Render("[SUCCESS]"), "Commit message is valid.")
 	os.Exit(0)
+}
+
+// isAllowedType checks if a given type is in the list of allowed types.
+func isAllowedType(commitType string, allowedTypes []string) bool {
+	for _, t := range allowedTypes {
+		if t == commitType {
+			return true
+		}
+	}
+	return false
 }
 
 // printGuidelines prints the beautifully styled help text.
