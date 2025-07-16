@@ -44,16 +44,16 @@ jobs:
     - name: Rename binary for release
       # Create a unique name for each binary based on its OS and architecture.
       run: |
-        BINARY_NAME="cl-${{ matrix.go-os }}-${{ matrix.go-arch }}"
-        mv ./bin/cl ./bin/${BINARY_NAME}
+        BINARY_NAME="ch-${{ matrix.go-os }}-${{ matrix.go-arch }}"
+        mv ./bin/ch ./bin/${BINARY_NAME}
       shell: bash
 
     - name: Upload artifact
       # Upload the compiled binary so it can be used in the 'release' job.
       uses: actions/upload-artifact@v4
       with:
-        name: cl-binaries
-        path: ./bin/cl-*
+        name: ch-binaries
+        path: ./bin/ch-*
 
   # The 'release' job creates a new GitHub Release and uploads the binaries.
   # It only runs when code is pushed to the 'master' branch.
@@ -70,7 +70,7 @@ jobs:
       # Download the binaries that were uploaded by the 'build' job.
       uses: actions/download-artifact@v4
       with:
-        name: cl-binaries
+        name: ch-binaries
         path: ./release-assets
 
     - name: Generate release tag
