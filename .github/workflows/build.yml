@@ -7,22 +7,18 @@ on:
     branches: [ "master" ]
 
 jobs:
-  # The 'build' job compiles the application for different operating systems and architectures.
+  # The 'build' job remains exactly the same. It compiles the binaries.
   build:
-    # Use a matrix strategy to define the build targets.
     strategy:
       matrix:
-        # Define the Go-specific OS and architecture pairs.
         go-os: [linux, darwin]
         go-arch: [amd64, arm64]
-        # Use 'include' to map the Go OS to the correct GitHub Actions runner.
         include:
           - go-os: linux
             os: ubuntu-latest
           - go-os: darwin
             os: macos-latest
     
-    # Run each build job on the corresponding runner defined in the matrix.
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -32,59 +28,51 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24.4'
+        go-version: '1.24.4' # Use your Go version
 
     - name: Build the binary
-      # Pass the correct GOOS and GOARCH from the matrix to the build command.
-      run: make build
+      # Use the correct binary name 'ch'
+      run: |
+        BINARY_NAME="ch-${{ matrix.go-os }}-${{ matrix.go-arch }}"
+        make build
+        mv ./bin/ch ./bin/${BINARY_NAME}
       env:
         GOOS: ${{ matrix.go-os }}
         GOARCH: ${{ matrix.go-arch }}
 
-    - name: Rename binary for release
-      # Create a unique name for each binary based on its OS and architecture.
-      run: |
-        BINARY_NAME="ch-${{ matrix.go-os }}-${{ matrix.go-arch }}"
-        mv ./bin/ch ./bin/${BINARY_NAME}
-      shell: bash
-
     - name: Upload artifact
-      # Upload the compiled binary so it can be used in the 'release' job.
       uses: actions/upload-artifact@v4
       with:
+        # Create a unique name for the artifact to avoid collisions
         name: ch-binary-${{ matrix.go-os }}-${{ matrix.go-arch }}
         path: ./bin/ch-*
 
-  # The 'release' job creates a new GitHub Release and uploads the binaries.
-  # It only runs when code is pushed to the 'master' branch.
+  # This job uses release-please to automate versioning and changelogs.
   release:
     runs-on: ubuntu-latest
-    # This job depends on the 'build' job completing successfully.
     needs: build
-    # This condition ensures the release only happens on a push to the master branch.
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    
+    # These permissions are required for release-please to create releases and PRs.
     permissions:
-      contents: write # This permission is required to create a release.
+      contents: write
+      pull-requests: write
+
     steps:
-    - name: Download all build artifacts
-      # Download all the binaries that were uploaded by the 'build' job.
-      uses: actions/download-artifact@v4
-      with:
-        # By not specifying a name, we download all artifacts from this workflow run.
-        path: ./release-assets
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./release-assets
 
-    - name: Generate release tag
-      # Create a unique tag name based on the current date and time.
-      id: tag
-      run: echo "tag_name=v$(date +'%Y.%m.%d.%H%M%S')" >> $GITHUB_OUTPUT
-
-    - name: Create GitHub Release
-      # Use the standard action for creating releases.
-      uses: softprops/action-gh-release@v2
-      with:
-        # Use the tag generated in the previous step.
-        tag_name: ${{ steps.tag.outputs.tag_name }}
-        # The title of the release will be the same as the tag.
-        name: ${{ steps.tag.outputs.tag_name }}
-        # --- FIX: Update the path to find all binaries in their subdirectories ---
-        files: ./release-assets/**/*
+      - name: Run Release Please
+        uses: google-github-actions/release-please-action@v4
+        id: release
+        with:
+          # This tells the action how to create the release.
+          release-type: go
+          # The token is required to create releases on your behalf.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This allows you to include your compiled binaries in the release.
+          # It finds all the downloaded artifacts and prepares them for upload.
+          extra-files: |
+            ./release-assets/**/*
