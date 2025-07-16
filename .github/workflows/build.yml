@@ -1,7 +1,8 @@
-name: Build and Release
+name: Build and Release on Tag
 
 on:
   push:
+    # Run on pushes to master for CI builds, and on any tag that looks like a version
     branches: [ "master" ]
     tags:
       - 'v*.*.*'
@@ -9,7 +10,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  # The 'build' job compiles the application for different operating systems and architectures.
+  # The 'build' job compiles the application. It runs on every push and pull request.
   build:
     strategy:
       matrix:
@@ -46,7 +47,7 @@ jobs:
         name: binary-${{ matrix.go-os }}-${{ matrix.go-arch }}
         path: ./bin/ch-${{ matrix.go-os }}-${{ matrix.go-arch }}
 
-# The 'release' job creates a GitHub Release ONLY when a tag is pushed.
+  # The 'release' job creates a GitHub Release ONLY when a tag is pushed.
   release:
     runs-on: ubuntu-latest
     # This job depends on the 'build' job completing successfully.
@@ -85,7 +86,6 @@ jobs:
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: binaries
           path: ./release-assets
 
       - name: Create GitHub Release
@@ -96,5 +96,4 @@ jobs:
           body_path: CHANGELOG.md
           # The tag name is automatically taken from the Git tag that triggered the workflow.
           # The release title will also be the tag name.
-          # The glob pattern finds all the compiled binaries.
-          files: ./release-assets/*
+          files: ./release-assets/**/*
