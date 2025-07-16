@@ -65,7 +65,7 @@ jobs:
           path: ./release-assets
 
       - name: Run Release Please
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         id: release
         with:
           # This tells the action how to create the release.
