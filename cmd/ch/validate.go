@@ -10,23 +10,23 @@ import (
 func runValidationMode(msgFilePath string) error {
 	messageBytes, err := os.ReadFile(msgFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to read commit message file: %s", msgFilePath)
+		fmt.Fprintln(os.Stderr, errorStyle.Render("[ERROR]"), "Failed to read commit message file:", msgFilePath)
+		return err
 	}
 	message := string(messageBytes)
 
 	firstLine := strings.TrimSpace(strings.Split(message, "\n")[0])
 
 	if firstLine == "" {
-		fmt.Println(errorStyle.Render("[ERROR] Commit message cannot be empty."))
+		fmt.Fprintln(os.Stderr, errorStyle.Render("[ERROR] Commit message cannot be empty."))
 		printGuidelines()
 		return fmt.Errorf("empty commit message")
 	}
 
-	// Regex to validate the Conventional Commits format
 	re := regexp.MustCompile(`^(?P<type>\w+)(?P<scope>\(\w+\))?(?P<breaking>!)?:(?P<subject>.+)$`)
 	matches := re.FindStringSubmatch(firstLine)
 	if matches == nil {
-		fmt.Println(errorStyle.Render("[ERROR] Invalid commit message format."))
+		fmt.Fprintln(os.Stderr, errorStyle.Render("[ERROR] Invalid commit message format."))
 		printGuidelines()
 		return fmt.Errorf("invalid format")
 	}
@@ -40,25 +40,26 @@ func runValidationMode(msgFilePath string) error {
 
 	commitType := result["type"]
 	if !isAllowedType(commitType, allowedTypes) {
-		fmt.Println(errorStyle.Render("[ERROR] Invalid commit type:"), fmt.Sprintf("'%s'", commitType))
-		fmt.Println("\nAllowed types are:")
-		fmt.Println("  " + codeStyle.Render(strings.Join(allowedTypes, ", ")))
+		fmt.Fprintf(os.Stderr, "%s '%s'\n", errorStyle.Render("[ERROR] Invalid commit type:"), commitType)
+		fmt.Fprintln(os.Stderr, "\nAllowed types are:")
+		fmt.Fprintln(os.Stderr, "  "+codeStyle.Render(strings.Join(allowedTypes, ", ")))
 		printGuidelines()
 		return fmt.Errorf("invalid type")
 	}
 
 	subject := result["subject"]
 	if !strings.HasPrefix(subject, " ") {
-		fmt.Println(errorStyle.Render("[ERROR] Subject must have a leading space after the colon."))
+		fmt.Fprintln(os.Stderr, errorStyle.Render("[ERROR] Subject must have a leading space after the colon."))
 		printGuidelines()
 		return fmt.Errorf("invalid subject format")
 	}
 	if strings.TrimSpace(subject) == "" {
-		fmt.Println(errorStyle.Render("[ERROR] Subject cannot be empty."))
+		fmt.Fprintln(os.Stderr, errorStyle.Render("[ERROR] Subject cannot be empty."))
 		printGuidelines()
 		return fmt.Errorf("empty subject")
 	}
 
+	fmt.Fprintln(os.Stderr, successStyle.Render("[SUCCESS]"), "Commit message is valid.")
 	return nil
 }
 
@@ -73,5 +74,5 @@ func printGuidelines() {
 	sb.WriteString("  " + codeStyle.Render("fix: correct a bug in the login flow") + "\n\n")
 	sb.WriteString("For more details, see: https://www.conventionalcommits.org")
 
-	fmt.Println(guidelineBoxStyle.Render(sb.String()))
+	fmt.Fprintln(os.Stderr, guidelineBoxStyle.Render(sb.String()))
 }

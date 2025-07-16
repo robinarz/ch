@@ -4,7 +4,7 @@
 BIN_DIR := bin
 
 # Define the name and path of the binary.
-BINARY_NAME := cl
+BINARY_NAME := ch
 CMD_PATH := ./cmd/$(BINARY_NAME)
 
 # The default target, which is an alias for 'build'.
@@ -28,7 +28,7 @@ clean:
 	@rm -rf $(BIN_DIR)
 	@echo "Cleanup complete."
 
-# This makes the 'cl' command available globally for the current user.
+# This makes the 'ch' command available globally for the current user.
 .PHONY: install
 install: build
 	@echo "Installing $(BINARY_NAME) to $(HOME)/.local/bin..."

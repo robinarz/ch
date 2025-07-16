@@ -62,7 +62,7 @@ func (m model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if key, ok := msg.(tea.KeyMsg); ok {
 		if key.Type == tea.KeyCtrlC {
 			m.confirmed = false
@@ -261,33 +261,23 @@ func (m *model) constructCommitMessage() string {
 	return msg.String()
 }
 
-func runInteractiveMode(commitFilePath string) error {
-	p := tea.NewProgram(initialModel())
+func runInteractiveMode() (string, error) {
+	m := initialModel()
+	p := tea.NewProgram(&m, tea.WithOutput(os.Stderr))
 
 	finalModel, err := p.Run()
 	if err != nil {
-		return fmt.Errorf("error running program: %w", err)
+		return "", fmt.Errorf("error running program: %w", err)
 	}
 
-	m, ok := finalModel.(model)
+	finalM, ok := finalModel.(*model)
 	if !ok {
-		return fmt.Errorf("could not cast final model")
+		return "", fmt.Errorf("could not cast final model")
 	}
 
-	if m.confirmed {
-		commitMsg := m.constructCommitMessage()
-		if commitFilePath != "" {
-			err := os.WriteFile(commitFilePath, []byte(commitMsg), 0644)
-			if err != nil {
-				return fmt.Errorf("failed to write to commit file: %w", err)
-			}
-			fmt.Println(successStyle.Render("\n✅ Commit message written to " + commitFilePath))
-		} else {
-			fmt.Println(guidelineBoxStyle.Render("\n--- Generated Commit Message ---\n" + commitMsg))
-		}
-	} else {
-		return fmt.Errorf("interactive mode cancelled by user")
+	if finalM.confirmed {
+		return finalM.constructCommitMessage(), nil
 	}
 
-	return nil
+	return "", fmt.Errorf("interactive mode cancelled by user")
 }
