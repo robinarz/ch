@@ -9,15 +9,22 @@ on:
 jobs:
   # The 'build' job compiles the application for different operating systems and architectures.
   build:
-    runs-on: ${{ matrix.os }}
+    # Use a matrix strategy to define the build targets.
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # Define the Go-specific OS and architecture pairs.
+        go-os: [linux, darwin]
         go-arch: [amd64, arm64]
-        # Exclude combinations that are not common or supported by default runners
-        exclude:
-          - os: windows-latest
-            go-arch: arm64
+        # Use 'include' to map the Go OS to the correct GitHub Actions runner.
+        include:
+          - go-os: linux
+            os: ubuntu-latest
+          - go-os: darwin
+            os: macos-latest
+    
+    # Run each build job on the corresponding runner defined in the matrix.
+    runs-on: ${{ matrix.os }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -28,30 +35,25 @@ jobs:
         go-version: '1.24.4'
 
     - name: Build the binary
+      # Pass the correct GOOS and GOARCH from the matrix to the build command.
       run: make build
       env:
-        GOOS: ${{ matrix.os }}
+        GOOS: ${{ matrix.go-os }}
         GOARCH: ${{ matrix.go-arch }}
 
     - name: Rename binary for release
       # Create a unique name for each binary based on its OS and architecture.
-      # For Windows, we add the .exe extension.
       run: |
-        OS_NAME=$(echo ${{ matrix.os }} | cut -d'-' -f1)
-        BINARY_NAME="ch-${OS_NAME}-${{ matrix.go-arch }}"
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          mv ./bin/ch ./bin/${BINARY_NAME}.exe
-        else
-          mv ./bin/ch ./bin/${BINARY_NAME}
-        fi
+        BINARY_NAME="cl-${{ matrix.go-os }}-${{ matrix.go-arch }}"
+        mv ./bin/cl ./bin/${BINARY_NAME}
       shell: bash
 
     - name: Upload artifact
       # Upload the compiled binary so it can be used in the 'release' job.
       uses: actions/upload-artifact@v4
       with:
-        name: ch-binaries
-        path: ./bin/ch-*
+        name: cl-binaries
+        path: ./bin/cl-*
 
   # The 'release' job creates a new GitHub Release and uploads the binaries.
   # It only runs when code is pushed to the 'master' branch.
@@ -68,7 +70,7 @@ jobs:
       # Download the binaries that were uploaded by the 'build' job.
       uses: actions/download-artifact@v4
       with:
-        name: ch-binaries
+        name: cl-binaries
         path: ./release-assets
 
     - name: Generate release tag
