@@ -2,12 +2,8 @@ name: Build and Release on Tag
 
 on:
   push:
-    # Run on pushes to master for CI builds, and on any tag that looks like a version
-    branches: [ "master" ]
     tags:
       - 'v*.*.*'
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
   # The 'build' job compiles the application. It runs on every push and pull request.
