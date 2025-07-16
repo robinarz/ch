@@ -2,9 +2,9 @@ name: Build and Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "master" ]
 
 jobs:
   # The 'build' job compiles the application for different operating systems and architectures.
@@ -54,13 +54,13 @@ jobs:
         path: ./bin/ch-*
 
   # The 'release' job creates a new GitHub Release and uploads the binaries.
-  # It only runs when code is pushed to the 'main' branch.
+  # It only runs when code is pushed to the 'master' branch.
   release:
     runs-on: ubuntu-latest
     # This job depends on the 'build' job completing successfully.
     needs: build
-    # This condition ensures the release only happens on a push to the main branch.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # This condition ensures the release only happens on a push to the master branch.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     permissions:
       contents: write # This permission is required to create a release.
     steps:
