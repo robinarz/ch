@@ -1,4 +1,4 @@
-# Commit Linter
+# Commit Helper
 
 A fast, lightweight Go tool to enforce Conventional Commits as a Git hook.
 
@@ -13,13 +13,13 @@ From this project's root directory, run:
 ```bash
 make build
 ```
-This creates the executable at bin/cl.
+This creates the executable at bin/ch.
 
 ### 2. Install as a Git Hook
 
 In the project repository where you want to use the linter:
 
-Copy the Binary: Copy the bin directory (containing the commit-linter executable) into your project's root folder.
+Copy the Binary: Copy the bin directory (containing the commit-helper executable) into your project's root folder.
 
 Create the Hook Script: Create a file at `.git/hooks/commit-msg` and add the following two lines:
 
@@ -27,7 +27,7 @@ Create the Hook Script: Create a file at `.git/hooks/commit-msg` and add the fol
 #!/bin/bash
 
 # Path to your compiled linter executable, relative to the repo root
-LINTER_PATH="./bin/cl"
+LINTER_PATH="./bin/ch"
 
 # Execute the linter
 "$LINTER_PATH" "$1"
