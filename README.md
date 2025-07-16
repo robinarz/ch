@@ -26,14 +26,20 @@ Create the Hook Script: Create a file at `.git/hooks/commit-msg` and add the fol
 ```bash
 #!/bin/bash
 
-# Path to your compiled linter executable, relative to the repo root
-LINTER_PATH="./bin/ch"
+LINTER_PATH="$HOME/.local/bin/ch"
+COMMIT_MSG_FILE="$1"
 
-# Execute the linter
-"$LINTER_PATH" "$1"
-
-# Exit with the linter's exit code
-exit $?
+# The hook's only job is to validate the commit message file.
+# The `validate` subcommand will print its own success or error messages
+# to the terminal's standard error stream, which preserves colors.
+# We only need to check the exit code.
+if "$LINTER_PATH" validate "$COMMIT_MSG_FILE"; then
+  # If the linter exits with 0, the commit is valid.
+  exit 0
+else
+  # If the linter exits with a non-zero code, the commit is invalid.
+  exit 1
+fi
 ```
 
 ### 3. Make the Hook Executable
