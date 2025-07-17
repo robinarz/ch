@@ -1,53 +1,101 @@
-# Commit Helper
+# Commit Helper (ch)
 
-A fast, lightweight Go tool to enforce Conventional Commits as a Git hook.
+A fast, lightweight Go tool to help you create beautiful, conventional commits.
 
-## Quick Start
+This tool provides:
 
-Prerequisites: Go (version 1.24 or later) and make.
+ - An interactive, step-by-step commit builder.
+ - A validator to enforce Conventional Commits on messages created manually.
 
-### 1. Build the Linter
+## Installation
 
-From this project's root directory, run:
+You can download the latest pre-compiled binary for your operating system.
 
 ```bash
-make build
+# macOS (Apple Silicon / arm64)
+
+curl -L -o ch https://github.com/robinarz/ch/releases/latest/download/ch-darwin-arm64
+chmod +x ch
+sudo mv ch $HOME/.local/bin/
 ```
-This creates the executable at bin/ch.
 
-### 2. Install as a Git Hook
+```bash
+# macOS (Intel / amd64)
 
-In the project repository where you want to use the linter:
+curl -L -o ch https://github.com/robinarz/ch/releases/latest/download/ch-darwin-amd64
+chmod +x ch
+sudo mv ch $HOME/.local/bin/
+```
 
-Copy the Binary: Copy the bin directory (containing the commit-helper executable) into your project's root folder.
+```bash
+# Linux (amd64)
 
-Create the Hook Script: Create a file at `.git/hooks/commit-msg` and add the following two lines:
+curl -L -o ch https://github.com/robinarz/ch/releases/latest/download/ch-linux-amd64
+chmod +x ch
+sudo mv ch $HOME/.local/bin/
+```
+
+## Usage
+### Interactive Commit Builder (Recommended)
+
+The primary way to use this tool is with the commit command. It will stage all your changes and guide you through creating a perfect commit message.
+
+Simply run this instead of git commit:
+
+```bash
+ch commit
+```
+
+### Manual Commit Validation (Optional Git Hook)
+
+If you still want to use `git commit -m "..."` manually, you can use **ch** as a safeguard to validate your message.
+
+- Create a file at .git/hooks/commit-msg in your repository.
+
+- Add the following script:
 
 ```bash
 #!/bin/bash
 
+# Path to your installed ch executable
 LINTER_PATH="$HOME/.local/bin/ch"
-COMMIT_MSG_FILE="$1"
 
-# The hook's only job is to validate the commit message file.
-# The `validate` subcommand will print its own success or error messages
-# to the terminal's standard error stream, which preserves colors.
-# We only need to check the exit code.
-if "$LINTER_PATH" validate "$COMMIT_MSG_FILE"; then
-  # If the linter exits with 0, the commit is valid.
+# Validate the commit message file
+if "$LINTER_PATH" validate "$1"; then
   exit 0
 else
-  # If the linter exits with a non-zero code, the commit is invalid.
   exit 1
 fi
 ```
 
-### 3. Make the Hook Executable
-
-Make the hook executable:
+- Make the hook executable:
 
 ```bash
 chmod +x .git/hooks/commit-msg
 ```
 
-That's it! Your commit messages will now be validated automatically.
+### Building from Source
+
+If you prefer to build the tool from source, you'll need Go (version 1.24 or later) and make.
+
+
+- Clone the repository:
+
+```bash
+git clone https://github.com/robinarz/ch.git
+cd ch
+```
+
+- Build the binary:
+
+```bash
+make build
+```
+This creates the executable at ./bin/ch.
+
+- Install the binary (optional):
+You can install the compiled binary to your local bin directory to make it available everywhere.
+
+```bash
+make install
+    
