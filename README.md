@@ -98,4 +98,5 @@ You can install the compiled binary to your local bin directory to make it avail
 
 ```bash
 make install
+```
     
